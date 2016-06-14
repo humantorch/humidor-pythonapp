@@ -1,11 +1,14 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 import MySQLdb
 import time
 import random
 import decimal
+import math
 import config
 import sys
 import Adafruit_DHT
+import tweepy
 
 # Parse command line parameters for sensor reading
 # TODO: once the final setup is complete hard-code these values
@@ -47,10 +50,17 @@ cur = db.cursor()
 nowtime = time.strftime('%Y-%m-%d %H:%M:%S')
 
 try:
+	# push info to database
 	cur.execute("INSERT INTO data(curdate, humidity, temperature) VALUES (%s, %s, %s)",(nowtime, humid, temp))
 	db.commit()
-	#print humid
-	#print temp
+
+	# post to Twitter
+	auth = tweepy.OAuthHandler(config.consumer_key, config.consumer_secret)
+	auth.set_access_token(config.access_token, config.access_secret)
+	api = tweepy.API(auth)
+	status = "Humidity: "+str(math.floor(humid*10)/10)+"%, Temperature: "+str(math.floor(temp*10)/10)+"ºF, as of: "+str(nowtime)
+	api.update_status(status=status)
+
 except MySQLdb.Error, e:
     try:
         print "MySQL Error [%d]: %s" % (e.args[0], e.args[1])
