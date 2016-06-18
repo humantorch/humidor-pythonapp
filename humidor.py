@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 import MySQLdb
 import time
-import random
-import decimal
 import math
 import config # get values from config.py
 import sys
