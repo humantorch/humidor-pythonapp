@@ -5,10 +5,10 @@ import time
 import random
 import decimal
 import math
-import config
+import config # get values from config.py
 import sys
-import Adafruit_DHT
-import tweepy
+import Adafruit_DHT # https://github.com/adafruit/Adafruit_Python_DHT
+import tweepy # https://github.com/tweepy/tweepy
 
 # Parse command line parameters for sensor reading
 # TODO: once the final setup is complete hard-code these values
@@ -29,18 +29,17 @@ else:
 # to 15 times to get a sensor reading (waiting 2 seconds between each retry).
 humidity, temperature = Adafruit_DHT.read_retry(sensor, pin)
 
-# Un-comment the line below to convert the temperature to Fahrenheit.
+# Comment out the line below to convert the temperature to Celsius.
 temperature = temperature * 9/5.0 + 32
 
 if humidity is not None and temperature is not None:
-    #print('Temp={0:0.1f}*  Humidity={1:0.1f}%'.format(temperature, humidity))
     humid = humidity
     temp = temperature
 else:
     print('Failed to get reading. Try again!')
     sys.exit(1)
 
-# set up db connection
+# set up db connection (uses values from config.py)
 db = MySQLdb.connect(host=config.host,
                      user=config.user,
                      passwd=config.pword,
@@ -54,10 +53,11 @@ try:
 	cur.execute("INSERT INTO data(curdate, humidity, temperature) VALUES (%s, %s, %s)",(nowtime, humid, temp))
 	db.commit()
 
-	# post to Twitter
+	# post to Twitter (uses values from config.py)
 	auth = tweepy.OAuthHandler(config.consumer_key, config.consumer_secret)
 	auth.set_access_token(config.access_token, config.access_secret)
 	api = tweepy.API(auth)
+    # TODO: detect if temp/humidity values are outside safety range and add an @ notification to my main Twitter account if so
 	status = "Humidity: "+str(math.floor(humid*10)/10)+"%, Temperature: "+str(math.floor(temp*10)/10)+"ºF, as of: "+str(nowtime)
 	api.update_status(status=status)
 
